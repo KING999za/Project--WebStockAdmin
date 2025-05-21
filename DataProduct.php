@@ -13,8 +13,10 @@ if ($conn->connect_error) {
 
 include 'log_function.php';
 
-// ดึงข้อมูลผู้ใช้จาก session
+// ✅ ดึง user_id จาก session ก่อนใช้งาน
 $user_id = $_SESSION['user_id'];
+
+// ดึงข้อมูลผู้ใช้จาก session
 $sql = "SELECT name, email, role FROM users WHERE id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
@@ -483,15 +485,57 @@ write_log($conn, $user_id, $action, $description);
             <div class="btn-group" role="group">
                 <!-- ปุ่มสำหรับเพิ่มสินค้า -->
                 <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#exampleModalCenter" style="background-color: #16302b;">
-                    Add products
-                </button>
+    <i class="fas fa-box-open me-2"></i> Add products
+</button>
+
                 
                 <!-- ปุ่มสำหรับขายสินค้า -->
                 <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#sellProductModal" style="background-color: #16302b;">
-                    Sell Product
-                </button>
+  <i class="fas fa-cash-register me-2"></i> Sell Product
+</button>
+
+                <!-- ปุ่มเปิด Modal ลบสินค้า -->
+<button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteProductModal">
+  <i class="fas fa-trash-alt"></i> ลบสินค้า
+</button>
+
+              
             </div>
         </div>
+        <?php if (isset($_GET['message'])): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <?php echo htmlspecialchars($_GET['message']); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
+
+<!-- Modal: ลบสินค้า -->
+<div class="modal fade" id="deleteProductModal" tabindex="-1" role="dialog" aria-labelledby="deleteProductModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content border-0 shadow-lg rounded">
+      <form id="deleteForm" method="POST" action="delete_product.php" onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบสินค้านี้?')">
+        <div class="modal-header text-white rounded-top" style="background-color: #8B0000;">
+          <h5 class="modal-title" id="deleteProductModalTitle">
+            <i class="fas fa-trash-alt mr-2"></i> ลบสินค้า
+          </h5>
+        </div>
+
+        <div class="modal-body bg-light">
+          <!-- รหัสสินค้า -->
+          <div class="form-group">
+            <label class="font-weight-bold" for="deleteProductId">รหัสสินค้า (Product ID)</label>
+            <input type="number" class="form-control" name="product_id" id="deleteProductId" placeholder="กรอกรหัสสินค้าที่ต้องการลบ" required>
+          </div>
+        </div>
+
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-danger">ลบสินค้า</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 
    
