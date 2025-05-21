@@ -1,7 +1,7 @@
 <?php 
 session_start();
 
-// ✅ ตรวจสอบการ login ก่อนเข้าใช้งาน
+// ตรวจสอบการ login ก่อนเข้าใช้งาน
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
     exit();
@@ -14,10 +14,10 @@ if ($conn->connect_error) {
 
 include 'log_function.php';
 
-// ✅ ดึง user_id จาก session
+// ดึง user_id จาก session
 $user_id = $_SESSION['user_id'];
 
-// ✅ ดึงข้อมูลผู้ใช้จาก user_id
+// ดึงข้อมูลผู้ใช้จาก user_id
 $stmt_user = $conn->prepare("SELECT name, email, role FROM users WHERE id = ?");
 $stmt_user->bind_param("i", $user_id);
 $stmt_user->execute();
@@ -33,52 +33,50 @@ if ($result_user->num_rows > 0) {
 }
 $stmt_user->close();
 
-
-// ✅ จำนวนผู้ใช้ (ไม่รวม admin)
+// จำนวนผู้ใช้ (ไม่รวม admin)
 $stmt_users = $conn->prepare("SELECT COUNT(*) AS users FROM users WHERE role != 'admin'");
 $stmt_users->execute();
 $stmt_users->bind_result($users);
 $stmt_users->fetch();
 $stmt_users->close();
 
-// ✅ ดึงจำนวนสินค้าทั้งหมด
+// ดึงจำนวนสินค้าทั้งหมด
 $stmt_products = $conn->prepare("SELECT COUNT(*) AS products FROM products");
 $stmt_products->execute();
 $stmt_products->bind_result($products);
 $stmt_products->fetch();
 $stmt_products->close();
 
-// ✅ ดึงสินค้าที่ใกล้หมด
+// ดึงสินค้าที่ใกล้หมด
 $stmt_low_stock = $conn->prepare("SELECT name, stock_quantity FROM products WHERE stock_quantity < 20");
 $stmt_low_stock->execute();
 $stmt_low_stock->store_result();
 $low_stock_count = $stmt_low_stock->num_rows;
 $stmt_low_stock->close();
 
-// ✅ ยอดขายรวม
+// ยอดขายรวม
 $stmt_sales = $conn->prepare("SELECT SUM(quantity * price) AS total_sales FROM sales");
 $stmt_sales->execute();
 $stmt_sales->bind_result($total_sales);
 $stmt_sales->fetch();
 $stmt_sales->close();
 
-// ✅ ดึงผู้ใช้ที่เป็น user
+// ดึงผู้ใช้ที่เป็น user
 $sql = "SELECT id, name, email, created_at, role FROM users WHERE role = 'user'";
 $result = $conn->query($sql);
 
-
-// ✅ ตัวอย่างการเก็บ log การกระทำ
-$product_id = $_POST['product_id'] ?? 'ไม่ระบุ';
-$quantity = $_POST['quantity'] ?? 0;
-$action = 'add_product'; // หรือ sell_product
-$description = "เพิ่มสินค้า: รหัส $product_id จำนวน $quantity";
-write_log($conn, $user_id, $action, $description);
+// --- เพิ่มส่วนนี้สำหรับเช็ค POST ก่อนเขียน log ---
+if (isset($_POST['product_id'], $_POST['quantity']) && !empty($_POST['product_id']) && $_POST['quantity'] > 0) {
+    $product_id = $_POST['product_id'];
+    $quantity = (int)$_POST['quantity'];
+    $action = 'add_product';
+    $description = "เพิ่มสินค้า: รหัส $product_id จำนวน $quantity";
+    write_log($conn, $user_id, $action, $description);
+}
 
 
 $conn->close();
 ?>
-
-
 
 
 <!DOCTYPE html>
@@ -270,18 +268,7 @@ $conn->close();
                         <i class="fa fa-bars"></i>
                     </button>
 
-                    <!-- Topbar Search -->
-                    <!-- <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
-                        <div class="input-group">
-                            <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..." aria-label="Search" aria-describedby="basic-addon2">
-                            <div class="input-group-append">
-                                <button class="btn custom-btn" type="button">
-                                    <i class="fas fa-search fa-sm"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </form> -->
-
+                
 
 
                     <!-- Topbar Navbar -->

@@ -33,14 +33,15 @@ if ($result->num_rows > 0) {
 }
 
 // รับค่าจากฟอร์ม
-$product_id = $_POST['product_id'] ?? 'ไม่ระบุ';
-$quantity = $_POST['quantity'] ?? 0;
+$product_id = $_POST['product_id'] ?? null;
+$quantity = $_POST['quantity'] ?? null;
 
-// เก็บ log
-$action = 'add_product'; // หรือ 'sell_product'
-$description = "เพิ่มสินค้า: รหัส $product_id จำนวน $quantity";
+if ($product_id !== null && $quantity !== null && $quantity > 0) {
+    $action = 'add_product'; // หรือ 'sell_product'
+    $description = "เพิ่มสินค้า: รหัส $product_id จำนวน $quantity";
+    write_log($conn, $user_id, $action, $description);
+}
 
-write_log($conn, $user_id, $action, $description);
 ?>
 
 
