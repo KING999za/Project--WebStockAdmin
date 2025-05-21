@@ -45,6 +45,23 @@ $stmt_sales->close();
 $sql = "SELECT id, name, email, created_at, role FROM users WHERE role = 'user'";
 $result = $conn->query($sql);
 
+// ดึงข้อมูลผู้ใช้จาก session
+$user_id = $_SESSION['user_id'];
+$sql = "SELECT name, email, role FROM users WHERE id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows > 0) {
+    $user_data = $result->fetch_assoc();
+    $name = $user_data['name'];
+    $email = $user_data['email'];
+    $role = $user_data['role'];
+} else {
+    $name = $email = $role = 'ไม่พบข้อมูล';
+}
+
 
 
 $conn->close();
@@ -413,10 +430,12 @@ $conn->close();
                         <!-- Dropdown - User Information -->
                         <ul class="dropdown-menu dropdown-menu-end shadow animated--grow-in"
                             aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="#">
-                                <i class="fas fa-user fa-sm fa-fw me-2 text-gray-400"></i>
-                                Profile
-                            </a></li>
+                            <li>
+                            <a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#Profile">
+                            <i class="fas fa-user fa-sm fa-fw me-2 text-gray-400"></i>
+                            Profile
+                             </a>
+                            </li>
                             <li><a class="dropdown-item" href="#">
                                 <i class="fas fa-cogs fa-sm fa-fw me-2 text-gray-400"></i>
                                 Settings
@@ -438,6 +457,45 @@ $conn->close();
                 </nav>
                 <!-- End of Topbar -->
 
+
+                <div class="modal fade" id="Profile" tabindex="-1" role="dialog" aria-labelledby="profileModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content border-0 shadow-lg rounded">
+      <div class="modal-header  text-white rounded-top"style="background-color: #16302b;">
+        <h5 class="modal-title" id="profileModalTitle">
+          <i class="fas fa-user-circle mr-2"></i> Profile
+        </h5>
+       
+      </div>
+
+      <div class="modal-body bg-light">
+        <div class="form-group">
+          <label class="font-weight-bold">User ID</label>
+          <input type="text" class="form-control" value="<?= htmlspecialchars($user_id) ?>" readonly>
+        </div>
+
+        <div class="form-group mt-3">
+          <label class="font-weight-bold">User name</label>
+          <input type="text" class="form-control" value="<?= htmlspecialchars($name) ?>" readonly>
+        </div>
+
+        <div class="form-group mt-3">
+          <label class="font-weight-bold">Email</label>
+          <input type="email" class="form-control" value="<?= htmlspecialchars($email) ?>" readonly>
+        </div>
+
+        <div class="form-group mt-3">
+          <label class="font-weight-bold">Role</label>
+          <input type="text" class="form-control" value="<?= htmlspecialchars($role) ?>" readonly>
+        </div>
+      </div>
+
+      <div class="modal-footer bg-light">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
 
