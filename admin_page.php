@@ -1,67 +1,78 @@
 <?php 
 session_start();
 
-// ตรวจสอบการ login ก่อนเข้าใช้งาน
-if (!isset($_SESSION['email'])){
+// ✅ ตรวจสอบการ login ก่อนเข้าใช้งาน
+if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
     exit();
 }
 
 $conn = new mysqli('localhost', 'root', '', 'users_db');
 if ($conn->connect_error) {
-    // แจ้งข้อผิดพลาดการเชื่อมต่อ
     die("ไม่สามารถเชื่อมต่อฐานข้อมูลได้: " . $conn->connect_error);
 }
 
-// ใช้ prepared statements เพื่อป้องกัน SQL Injection
-$stmt_users = $conn->prepare("SELECT COUNT(*) AS users FROM users WHERE role != 'admin'");
-$stmt_users->execute();
-$stmt_users->bind_result($users);
-$stmt_users->fetch();
-$stmt_users->close();
+include 'log_function.php';
 
-// ดึงจำนวนสินค้าทั้งหมด
-$stmt_products = $conn->prepare("SELECT COUNT(*) AS products FROM products");
-$stmt_products->execute();
-$stmt_products->bind_result($products);
-$stmt_products->fetch();
-$stmt_products->close();
-
-// ดึงสินค้าที่ใกล้หมด (เช่น stock_quantity < 20)
-$stmt_low_stock = $conn->prepare("SELECT name, stock_quantity FROM products WHERE stock_quantity < 20");
-$stmt_low_stock->execute();
-$stmt_low_stock->store_result();
-$low_stock_count = $stmt_low_stock->num_rows; // นับจำนวนสินค้าที่เหลือน้อยกว่า 20
-$stmt_low_stock->close();
-
-// ดึงข้อมูลยอดขายรวมจากตาราง sales
-$stmt_sales = $conn->prepare("SELECT SUM(quantity * price) AS total_sales FROM sales");
-$stmt_sales->execute();
-$stmt_sales->bind_result($total_sales);
-$stmt_sales->fetch();
-$stmt_sales->close();
-
-// Query เฉพาะ role = 'user'
-$sql = "SELECT id, name, email, created_at, role FROM users WHERE role = 'user'";
-$result = $conn->query($sql);
-
-// ดึงข้อมูลผู้ใช้จาก session
+// ✅ ดึง user_id จาก session
 $user_id = $_SESSION['user_id'];
-$sql = "SELECT name, email, role FROM users WHERE id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
 
-if ($result->num_rows > 0) {
-    $user_data = $result->fetch_assoc();
+// ✅ ดึงข้อมูลผู้ใช้จาก user_id
+$stmt_user = $conn->prepare("SELECT name, email, role FROM users WHERE id = ?");
+$stmt_user->bind_param("i", $user_id);
+$stmt_user->execute();
+$result_user = $stmt_user->get_result();
+
+if ($result_user->num_rows > 0) {
+    $user_data = $result_user->fetch_assoc();
     $name = $user_data['name'];
     $email = $user_data['email'];
     $role = $user_data['role'];
 } else {
     $name = $email = $role = 'ไม่พบข้อมูล';
 }
+$stmt_user->close();
 
+
+// ✅ จำนวนผู้ใช้ (ไม่รวม admin)
+$stmt_users = $conn->prepare("SELECT COUNT(*) AS users FROM users WHERE role != 'admin'");
+$stmt_users->execute();
+$stmt_users->bind_result($users);
+$stmt_users->fetch();
+$stmt_users->close();
+
+// ✅ ดึงจำนวนสินค้าทั้งหมด
+$stmt_products = $conn->prepare("SELECT COUNT(*) AS products FROM products");
+$stmt_products->execute();
+$stmt_products->bind_result($products);
+$stmt_products->fetch();
+$stmt_products->close();
+
+// ✅ ดึงสินค้าที่ใกล้หมด
+$stmt_low_stock = $conn->prepare("SELECT name, stock_quantity FROM products WHERE stock_quantity < 20");
+$stmt_low_stock->execute();
+$stmt_low_stock->store_result();
+$low_stock_count = $stmt_low_stock->num_rows;
+$stmt_low_stock->close();
+
+// ✅ ยอดขายรวม
+$stmt_sales = $conn->prepare("SELECT SUM(quantity * price) AS total_sales FROM sales");
+$stmt_sales->execute();
+$stmt_sales->bind_result($total_sales);
+$stmt_sales->fetch();
+$stmt_sales->close();
+
+// ✅ ดึงผู้ใช้ที่เป็น user
+$sql = "SELECT id, name, email, created_at, role FROM users WHERE role = 'user'";
+$result = $conn->query($sql);
+
+
+// ✅ ตัวอย่างการเก็บ log การกระทำ
+$product_id = $_POST['product_id'] ?? 'ไม่ระบุ';
+$quantity = $_POST['quantity'] ?? 0;
+$action = 'add_product'; // หรือ sell_product
+$description = "เพิ่มสินค้า: รหัส $product_id จำนวน $quantity";
+write_log($conn, $user_id, $action, $description);
 
 
 $conn->close();
@@ -457,7 +468,6 @@ $conn->close();
                 </nav>
                 <!-- End of Topbar -->
 
-
                 <div class="modal fade" id="Profile" tabindex="-1" role="dialog" aria-labelledby="profileModalTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content border-0 shadow-lg rounded">
@@ -496,6 +506,7 @@ $conn->close();
     </div>
   </div>
 </div>
+                
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
 
