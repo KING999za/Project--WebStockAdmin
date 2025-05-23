@@ -370,6 +370,12 @@ if (!isset($_SESSION['email'])){
                                 <i class="fas fa-list fa-sm fa-fw me-2 text-gray-400"></i>
                                 Activity Log
                             </a></li>
+                            <li>
+                                <a class="dropdown-item" href="generate_report.php" target="_blank">
+                                <i class="fas fa-file-pdf fa-sm fa-fw me-2 text-gray-400"></i>
+                             Download Monthly Report
+                            </a>
+                            </li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
                                 <i class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-gray-400"></i>
