@@ -64,7 +64,7 @@ unset($_SESSION['login_error'], $_SESSION['register_error'], $_SESSION['forgot_p
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fullstack</title>
+    <title>STOCK</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
